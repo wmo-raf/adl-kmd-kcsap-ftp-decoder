@@ -1,0 +1,128 @@
+# MAKE SURE YOU HAVE SET THE REQUIRED VARIABLES IN the .env FILE.configs:
+
+# This compose file starts up a dev version of the plugin with hot code reloading.
+# It is accessible at http://localhost .
+
+x-adl-variables: &adl-variables
+  DATABASE_URL: postgis://${ADL_DB_USER:-adl}:${ADL_DB_PASSWORD}@adl_db:5432/${ADL_DB_NAME:-adl}
+  REDIS_URL: redis://adl_redis:6379/0
+  PLUGIN_RUNTIME_SETUP_MARKER: 0
+  WAIT_TIMEOUT: 120
+
+services:
+  adl_db:
+    image: timescale/timescaledb-ha:pg15
+    container_name: adl-kmd-kcsap-ftp-decoder-db
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${ADL_DB_USER:-adl}
+      - POSTGRES_DB=${ADL_DB_NAME:-adl}
+      - POSTGRES_PASSWORD=${ADL_DB_PASSWORD:-?}
+    ports:
+      - "5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  adl_redis:
+    image: redis:alpine
+
+  adl:
+    image: adl-kmd-kcsap-ftp-decoder_dev
+    container_name: adl-kmd-kcsap-ftp-decoder
+    build:
+      context: .
+      dockerfile: ./dev.Dockerfile
+      args:
+        - PLUGIN_BUILD_UID=${PLUGIN_BUILD_UID}
+        - PLUGIN_BUILD_GID=${PLUGIN_BUILD_GID}
+    ports:
+      - "${PORT:-8080}:8000"
+    env_file:
+      - .env
+    environment:
+      <<: *adl-variables
+      WAIT_HOSTS: adl_db:5432,adl_redis:6379
+    depends_on:
+      - adl_db
+      - adl_redis
+    volumes:
+      - ./plugins/adl_kmd_kcsap_ftp_decoder:/adl/plugins/adl_kmd_kcsap_ftp_decoder
+    # Open stdin and tty so when attaching key input works as expected.
+    tty: true              # enables terminal support
+    stdin_open: true       # allows interactive input
+
+  # Three queue-specific workers, mirroring the core stack: the entrypoint
+  # has no generic "celery-worker" command, and core routes ingestion to
+  # the "adl" queue and outbound dispatch to the "dispatch" queue -- a
+  # single default-queue worker would never consume them.
+  adl_celery_worker_default:
+    image: adl-kmd-kcsap-ftp-decoder_dev
+    command: celery-worker-default
+    container_name: adl-kmd-kcsap-ftp-decoder-worker-default
+    env_file:
+      - .env
+    environment:
+      <<: *adl-variables
+      WAIT_HOSTS: adl_db:5432,adl_redis:6379,adl:8000
+    depends_on:
+      - adl
+    volumes:
+      - ./plugins/adl_kmd_kcsap_ftp_decoder:/adl/plugins/adl_kmd_kcsap_ftp_decoder
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  adl_celery_worker_adl:
+    image: adl-kmd-kcsap-ftp-decoder_dev
+    command: celery-worker-adl
+    container_name: adl-kmd-kcsap-ftp-decoder-worker-adl
+    env_file:
+      - .env
+    environment:
+      <<: *adl-variables
+      WAIT_HOSTS: adl_db:5432,adl_redis:6379,adl:8000
+    depends_on:
+      - adl
+    volumes:
+      - ./plugins/adl_kmd_kcsap_ftp_decoder:/adl/plugins/adl_kmd_kcsap_ftp_decoder
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  adl_celery_worker_dispatch:
+    image: adl-kmd-kcsap-ftp-decoder_dev
+    command: celery-worker-dispatch
+    container_name: adl-kmd-kcsap-ftp-decoder-worker-dispatch
+    env_file:
+      - .env
+    environment:
+      <<: *adl-variables
+      WAIT_HOSTS: adl_db:5432,adl_redis:6379,adl:8000
+    depends_on:
+      - adl
+    volumes:
+      - ./plugins/adl_kmd_kcsap_ftp_decoder:/adl/plugins/adl_kmd_kcsap_ftp_decoder
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  adl_celery_beat:
+    image: adl-kmd-kcsap-ftp-decoder_dev
+    container_name: adl-kmd-kcsap-ftp-decoder-beat
+    command: celery-beat
+    env_file:
+      - .env
+    environment:
+      <<: *adl-variables
+      WAIT_HOSTS: adl_db:5432,adl_redis:6379,adl:8000
+    depends_on:
+      - adl
+    volumes:
+      - ./plugins/adl_kmd_kcsap_ftp_decoder:/adl/plugins/adl_kmd_kcsap_ftp_decoder
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+volumes:
+  pgdata:

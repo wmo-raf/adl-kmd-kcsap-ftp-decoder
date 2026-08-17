@@ -1,0 +1,7 @@
+include README.md
+
+recursive-include src/ *.py
+recursive-include src/**/templates *
+recursive-include src/**/static *
+recursive-include src/**/locale *.po *.mo
+recursive-include src/**/tests/fixtures *

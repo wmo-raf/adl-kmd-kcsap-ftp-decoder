@@ -1,0 +1,10 @@
+{
+  "name": "ADL KMD KCSAP FTP Decoder",
+  "version": "0.1.0",
+  "description": "ADL FTP decoder for Kenya Meteorological Department (KMD) KCSAP AWS minute files",
+  "author": "WMO RAF",
+  "author_url": "https://github.com/wmo-raf",
+  "url": "https://github.com/wmo-raf/adl-kmd-kcsap-ftp-decoder",
+  "license": "MIT",
+  "contact": "erick.otenyo@wmo.int"
+}
