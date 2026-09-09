@@ -1,0 +1,77 @@
+# Screenshot manifest for the ADL KMD KCSAP FTP Decoder guide (docs/guide.md).
+# Regenerate from the adl repo:  scripts/capture-plugin-docs.sh ../adl-plugins/adl-kmd-kcsap-ftp-decoder
+# Fixture (execution pass): an ADL FTP Plugin connection (id 1) using the kcsap decoder,
+# pointed at the harness's mock FTP source serving KMD_001_<YYYYMMDDHHMM>.csv sample files
+# (the two files under tests/fixtures/ are a starting point). Station link 1 = station 001,
+# listing strategy Direct Fetch. Selectors are blind guesses — fix against the live pages.
+# Format: defaults + screenshots (name/url/setup/callouts/capture), run by adl's
+# docs/screenshots/capture/capture.py; output derives from name: docs/images/<name>.png.
+# Callouts are numbered badges/outlines only — never text in images.
+
+defaults:
+  viewport:
+  - 1440
+  - 900
+  padding: 12
+screenshots:
+- name: kcsap_connection_form
+  url: /networkftp/edit/1/
+  setup:
+  - fill: { selector: '#id_password', value: '••••••••••••' }
+  # The panels are flat siblings of the form, so a crop to the form runs all
+  # the way through the inline variable mappings — 5000px, and a duplicate of
+  # kcsap_variable_mappings, which shoots that panel on its own below.
+  - eval: "document.querySelector('#panel-variable_mappings-section').style.display = 'none'"
+  callouts:
+  - highlight: '#id_decoder'
+  capture:
+    selector: "#w-editor-form"
+- name: kcsap_variable_mappings
+  url: /networkftp/edit/1/
+  capture:
+    selector: '#panel-variable_mappings-section'
+- name: kcsap_populate_mappings
+  # The FTP plugin's populate action, reached from the connection row's "…" menu.
+  # URL per adl-ftp-plugin's wagtail_hooks; verify the prefix on the live stack.
+  url: /adl-ftp-plugin/connections/1/populate-variable-mappings/
+  capture:
+    selector: main
+    max_height: 1400
+- name: kcsap_station_link_form
+  url: /ftpstationlink/edit/1/
+  callouts:
+  - badge:
+      target: '#id_listing_strategy'
+      n: 1
+  - badge:
+      target: '#id_direct_fetch_prefix'
+      n: 2
+  - badge:
+      target: '#id_direct_fetch_datetime_format'
+      n: 3
+  - badge:
+      target: '#id_direct_fetch_interval_minutes'
+      n: 4
+  - badge:
+      target: '#id_direct_fetch_file_extension'
+      n: 5
+  - badge:
+      target: '#id_start_date'
+      n: 6
+  capture:
+    selector: "#w-editor-form"
+- name: kcsap_ingestion_diagnostic
+  url: /monitoring/connection/1/health/
+  callouts:
+  - highlight: .health-probe-form button
+  capture:
+    selector: .health-diagnostic
+- name: kcsap_station_source_check
+  url: /ftpstationlink/inspect/1/
+  capture:
+    selector: ":nth-match(.collection-status, 2)"
+- name: kcsap_data_files
+  url: /snippets/adl_ftp_plugin/ftpstationdatafile/
+  capture:
+    selector: main
+    max_height: 1200
