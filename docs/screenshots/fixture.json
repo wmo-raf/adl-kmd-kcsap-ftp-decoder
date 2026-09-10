@@ -1,0 +1,82 @@
+{
+  "capture": {
+    "connection": "Demo KMD KCSAP (mock source)",
+    "ingest": true,
+    "probe": true,
+    "station_checks": ["DEMO001"],
+    "wait": 240,
+    "present_interval": 15
+  },
+  "connection": {
+    "model": "adl_ftp_plugin.NetworkFTP",
+    "fields": {
+      "name": "Demo KMD KCSAP (mock source)",
+      "plugin": "adl_ftp_plugin",
+      "stations_timezone": "Africa/Nairobi",
+      "plugin_processing_interval": 1,
+      "connection_type": "ftp",
+      "host": "mock_ftp",
+      "port": 21,
+      "username": "demo",
+      "password": "demo",
+      "passive_mode": true,
+      "timeout": 20,
+      "decoder": "kcsap"
+    },
+    "children": {
+      "variable_mappings": [
+        {
+          "adl_parameter": "Air Temperature",
+          "file_variable_name": "air_temperature_2m",
+          "file_variable_unit": "degC"
+        },
+        {
+          "adl_parameter": "Relative Humidity",
+          "file_variable_name": "relative_humidity_2m",
+          "file_variable_unit": "percent"
+        },
+        {
+          "adl_parameter": "Atmospheric Pressure",
+          "file_variable_name": "air_pressure_2m",
+          "file_variable_unit": "hPa"
+        },
+        {
+          "adl_parameter": "Precipitation",
+          "file_variable_name": "precipitation_1m",
+          "file_variable_unit": "mm"
+        },
+        {
+          "adl_parameter": "Wind Speed",
+          "file_variable_name": "wind_speed_2m",
+          "file_variable_unit": "knot"
+        },
+        {
+          "adl_parameter": "Wind Direction",
+          "file_variable_name": "wind_direction_avg_2m",
+          "file_variable_unit": "degree"
+        },
+        {
+          "adl_parameter": "Solar Radiation",
+          "file_variable_name": "total_radiation_1m",
+          "file_variable_unit": "W/m^2"
+        }
+      ]
+    }
+  },
+  "station_links": [
+    {
+      "model": "adl_ftp_plugin.FTPStationLink",
+      "station": "DEMO001",
+      "fields": {
+        "ftp_path": "/data/KMD001",
+        "listing_strategy": "direct_fetch",
+        "direct_fetch_prefix": "KMD_001_",
+        "direct_fetch_datetime_format": "YYYYMMDDHHMM",
+        "direct_fetch_interval_minutes": 1,
+        "direct_fetch_file_extension": ".csv",
+        "direct_fetch_datetime_timezone": "UTC",
+        "start_date": "$NOW-2h"
+      }
+    }
+  ]
+}
